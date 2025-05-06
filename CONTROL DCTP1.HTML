@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Control de Porcentajes - DCTAP</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            padding: 30px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+        th, td {
+            background: white;
+            padding: 12px;
+            text-align: center;
+            border: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        input[type="number"], input[type="text"], input[type="date"], select {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            margin: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .botonera {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .historial {
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            color: #555;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 Control de Porcentajes - División Policial</h1>
+
+<table id="tabla">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Fecha</th>
+            <th>Porcentaje Actual</th>
+            <th>Sumar %</th>
+            <th>Actualizar</th>
+            <th>Historial</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><input type="text" placeholder="Nombre"></td>
+            <td>
+                <select>
+                    <option value="participante">Participante</option>
+                    <option value="organizador">Organizador</option>
+                </select>
+            </td>
+            <td><input type="date"></td>
+            <td class="porcentajeTotal">0%</td>
+            <td><input type="number" step="0.1" placeholder="Ej: 7.5" class="sumarPorcentaje"></td>
+            <td><button onclick="sumarPorcentaje(this)">Sumar</button></td>
+            <td class="historial"></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="botonera">
+    <button onclick="agregarFila()">Agregar Miembro</button>
+    <button onclick="resetearTodo()">Resetear Todo</button>
+    <button onclick="guardarDatos()">Guardar Datos</button>
+    <button onclick="cargarDatos()">Cargar Datos</button>
+</div>
+
+<script>
+function agregarFila() {
+    const tabla = document.getElementById('tabla').getElementsByTagName('tbody')[0];
+    const nuevaFila = tabla.insertRow();
+    nuevaFila.innerHTML = `
+        <td><input type="text" placeholder="Nombre"></td>
+        <td>
+            <select>
+                <option value="participante">Participante</option>
+                <option value="organizador">Organizador</option>
+            </select>
+        </td>
+        <td><input type="date"></td>
+        <td class="porcentajeTotal">0%</td>
+        <td><input type="number" step="0.1" placeholder="Ej: 7.5" class="sumarPorcentaje"></td>
+        <td><button onclick="sumarPorcentaje(this)">Sumar</button></td>
+        <td class="historial"></td>
+    `;
+}
+
+function sumarPorcentaje(boton) {
+    const fila = boton.parentElement.parentElement;
+    const porcentajeCell = fila.querySelector(".porcentajeTotal");
+    const inputSumar = fila.querySelector(".sumarPorcentaje");
+    const historialCell = fila.querySelector(".historial");
+    const rol = fila.querySelector("select").value;
+    const fecha = fila.querySelector("input[type='date']").value;
+
+    let porcentajeActual = parseFloat(porcentajeCell.textContent.replace("%", "")) || 0;
+    let porcentajeASumar = parseFloat(inputSumar.value) || 0;
+
+    if (porcentajeASumar > 0) {
+        porcentajeActual += porcentajeASumar;
+        porcentajeCell.textContent = porcentajeActual.toFixed(1) + "%";
+
+        historialCell.innerHTML += `+${porcentajeASumar.toFixed(1)}% (${rol}) - ${fecha}<br>`;
+        inputSumar.value = "";
+    } else {
+        alert("Por favor ingresa un porcentaje válido.");
+    }
+}
+
+function resetearTodo() {
+    if (confirm("¿Estás seguro de que quieres resetear todos los datos?")) {
+        const filas = document.querySelectorAll("#tabla tbody tr");
+        filas.forEach(fila => {
+            fila.querySelector(".porcentajeTotal").textContent = "0%";
+            fila.querySelector(".historial").innerHTML = "";
+            fila.querySelector("input[type='text']").value = "";
+            fila.querySelector("input[type='date']").value = "";
+            fila.querySelector(".sumarPorcentaje").value = "";
+        });
+    }
+}
+
+function guardarDatos() {
+    const filas = document.querySelectorAll("#tabla tbody tr");
+    const datos = [];
+
+    filas.forEach(fila => {
+        const nombre = fila.querySelector("input[type='text']").value;
+        const rol = fila.querySelector("select").value;
+        const fecha = fila.querySelector("input[type='date']").value;
+        const porcentaje = fila.querySelector(".porcentajeTotal").textContent.replace("%", "");
+        const historial = fila.querySelector(".historial").innerHTML;
+
+        if (nombre) {
+            datos.push({ nombre, rol, fecha, porcentaje, historial });
+        }
+    });
+
+    if (datos.length > 0) {
+        localStorage.setItem("datos", JSON.stringify(datos));
+        alert("Datos guardados correctamente.");
+    } else {
+        alert("No hay datos para guardar.");
+    }
+}
+
+function cargarDatos() {
+    const datosGuardados = JSON.parse(localStorage.getItem("datos"));
+
+    if (datosGuardados && datosGuardados.length > 0) {
+        const tabla = document.getElementById('tabla').getElementsByTagName('tbody')[0];
+        tabla.innerHTML = '';
+
+        datosGuardados.forEach(dato => {
+            const nuevaFila = tabla.insertRow();
+            nuevaFila.innerHTML = `
+                <td><input type="text" value="${dato.nombre}"></td>
+                <td>
+                    <select>
+                        <option value="participante" ${dato.rol === "participante" ? "selected" : ""}>Participante</option>
+                        <option value="organizador" ${dato.rol === "organizador" ? "selected" : ""}>Organizador</option>
+                    </select>
+                </td>
+                <td><input type="date" value="${dato.fecha}"></td>
+                <td class="porcentajeTotal">${dato.porcentaje}%</td>
+                <td><input type="number" step="0.1" placeholder="Ej: 7.5" class="sumarPorcentaje"></td>
+                <td><button onclick="sumarPorcentaje(this)">Sumar</button></td>
+                <td class="historial">${dato.historial}</td>
+            `;
+        });
+    } else {
+        alert("No hay datos guardados.");
+    }
+}
+</script>
+
+</body>
+</html>
